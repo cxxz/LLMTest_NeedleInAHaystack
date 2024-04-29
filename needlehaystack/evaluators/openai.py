@@ -38,11 +38,16 @@ class OpenAIEvaluator(Evaluator):
         api_key = os.getenv('NIAH_EVALUATOR_API_KEY')
         if (not api_key):
             raise ValueError("NIAH_EVALUATOR_API_KEY must be in env for using openai evaluator.")
-
+        
+        base_url = os.getenv('NIAH_EVALUATOR_BASE_URL')
+        if (not base_url):
+            raise ValueError("NIAH_EVALUATOR_BASE_URL must be in env for using openai evaluator.")
+       
         self.api_key = api_key
         
         self.evaluator = ChatOpenAI(model=self.model_name,
                                     openai_api_key=self.api_key,
+                                    base_url=base_url,
                                     **self.model_kwargs)
 
     def evaluate_response(self, response: str) -> int:

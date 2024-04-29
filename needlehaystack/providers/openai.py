@@ -8,7 +8,7 @@ from langchain.prompts import PromptTemplate
 import tiktoken
 
 from .model import ModelProvider
-
+from transformers import AutoTokenizer
 
 class OpenAI(ModelProvider):
     """
@@ -26,6 +26,7 @@ class OpenAI(ModelProvider):
 
     def __init__(self,
                  model_name: str = "gpt-3.5-turbo-0125",
+                 tokenizer_name: str = "tiktoken",
                  model_kwargs: dict = DEFAULT_MODEL_KWARGS):
         """
         Initializes the OpenAI model provider with a specific model.
@@ -45,7 +46,10 @@ class OpenAI(ModelProvider):
         self.model_kwargs = model_kwargs
         self.api_key = api_key
         self.model = AsyncOpenAI(api_key=self.api_key)
-        self.tokenizer = tiktoken.encoding_for_model(self.model_name)
+        if tokenizer_name == "tiktoken":
+            self.tokenizer = tiktoken.encoding_for_model(self.model_name)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
     
     async def evaluate_model(self, prompt: str) -> str:
         """
@@ -75,17 +79,18 @@ class OpenAI(ModelProvider):
         Returns:
             list[dict[str, str]]: A list of dictionaries representing the structured prompt, including roles and content for system and user messages.
         """
-        return [{
-                "role": "system",
-                "content": "You are a helpful AI bot that answers questions for a user. Keep your response short and direct"
-            },
+        return [
+            # {
+            #     "role": "system",
+            #     "content": "You are a helpful AI bot that answers questions for a user. Keep your response short and direct"
+            # },
+            # {
+            #     "role": "user",
+            #     "content": context
+            # },
             {
                 "role": "user",
-                "content": context
-            },
-            {
-                "role": "user",
-                "content": f"{retrieval_question} Don't give information outside the document or repeat your findings"
+                "content": f"You are a helpful AI bot that answers questions for a user. Keep your response short and direct.\n{context}\n{retrieval_question} Don't give information outside the document or repeat your findings"
             }]
     
     def encode_text_to_tokens(self, text: str) -> list[int]:
